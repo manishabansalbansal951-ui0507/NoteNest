@@ -741,8 +741,8 @@ res.writeHead(200, {
 
         });
 
-server.listen(5000, () => {
-    console.log('Server is running on port 5000');
+server.listen(process.env.PORT || 5000, () => {
+    console.log(`Server is running on port ${process.env.PORT || 5000}`);
 });
 
              } else if (req.url.startsWith('/notes/') && req.method === 'DELETE') {
@@ -833,6 +833,8 @@ res.writeHead(200, {
 
 });
 
-server.listen(5000, () => {
-    console.log('Server is running on port 5000');
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
