@@ -31,7 +31,7 @@ function UploadNotes({ onUpload }) {
       setLoading(true);
 
       const response = await fetch(
-        'http://localhost:5000/upload-note',
+        'https://notenest-backend-6a8o.onrender.com/upload-note',
         {
           method: 'POST',
           body: formData

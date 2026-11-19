@@ -70,7 +70,7 @@ function App() {
    useEffect(() => {
   const fetchNotes = async () => {
     try {
-      const response = await fetch('http://localhost:5000/notes');
+      const response = await fetch('https://notenest-backend-6a8o.onrender.com/notes');
       const data = await response.json();
 
       setNotes(data);
@@ -154,7 +154,7 @@ function App() {
   if (confirmDelete) {
     try {
       const response = await fetch(
-        `http://localhost:5000/notes/${id}`,
+        `https://notenest-backend-6a8o.onrender.com/notes/${id}`,
         {
           method: 'DELETE'
         }

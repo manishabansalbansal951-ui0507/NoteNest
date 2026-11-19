@@ -59,7 +59,7 @@ function ExploreNotes({ notes }) {
                 <button
                   onClick={() =>
                     window.open(
-                      `http://localhost:5000/uploads/${note.fileName}`,
+                      `https://notenest-backend-6a8o.onrender.com/uploads/${note.fileName}`,
                       '_blank'
                     )
                   }
@@ -71,7 +71,7 @@ function ExploreNotes({ notes }) {
                   onClick={() => {
                     const link = document.createElement('a');
 
-                    link.href = `http://localhost:5000/uploads/${note.fileName}?download=true`;
+                    link.href = `https://notenest-backend-6a8o.onrender.com/uploads/${note.fileName}?download=true`;
                     link.download = note.fileName;
 
                     link.click();
