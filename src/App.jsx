@@ -3,7 +3,7 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import Login from './Login';
 import heroImage from './assets/hero.png';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import ExploreNotes from './pages/ExploreNotes';
 import UploadNotes from './pages/UploadNotes';
 import MyNotes from './pages/MyNotes';
@@ -291,9 +291,18 @@ function App() {
         </>
       }s
     />
+    <Route
+  path="/"
+  element={
+    <Navigate
+      to={isLoggedIn ? "/home" : "/login"}
+      replace
+    />
+  }
+/>
       {/* Home Page */}
       <Route
-        path="/"
+        path="/home"
         element={
           <div>
             <Navbar title="NoteNest" />
