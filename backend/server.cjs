@@ -326,6 +326,7 @@ const server = http.createServer(async (req, res) => {
 
                     const newNote = {
                         id: crypto.randomUUID(),
+                        userId: fields.userId || null,
                         title: fields.title,
                         subject: fields.subject,
                         description: fields.description || '',
@@ -354,12 +355,18 @@ const server = http.createServer(async (req, res) => {
             return;
         }
 
-        // GET ALL NOTES
+       // GET USER NOTES
         if (req.method === 'GET' && pathname === '/notes') {
+
+            const userId = new URL(req.url, 'http://localhost').searchParams.get('userId');
 
             const notes = readJSON(notesFile);
 
-            sendJSON(res, 200, notes);
+            const userNotes = notes.filter(
+                note => note.userId === userId
+            );
+
+            sendJSON(res, 200, userNotes);
             return;
         }
 

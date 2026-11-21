@@ -31,60 +31,32 @@ function App() {
   const [editingNoteId, setEditingNoteId] = useState(null);
 
   // Load Notes
-  const [notes, setNotes] = useState(() => {
-    const savedNotes = localStorage.getItem("notes");
-
-    return savedNotes ? JSON.parse(savedNotes) : [
-      {
-        id: 1,
-        title: "DBMS Notes",
-        subject: "Database Management",
-        description: "Complete DBMS notes for students."
-      },
-      {
-        id: 2,
-        title: "DAA Notes",
-        subject: "Design and Analysis",
-        description: "Algorithms and problem-solving notes."
-      },
-      {
-        id: 3,
-        title: "Operating System Notes",
-        subject: "Operating Systems",
-        description: "Important OS concepts and questions."
-      },
-      {
-        id: 4,
-        title: "Python Notes",
-        subject: "Programming",
-        description: "Python programming notes for beginners."
-      },
-      {
-        id: 5,
-        title: "Computer Networks Notes",
-        subject: "Networking",
-        description: "Networking concepts and protocols."
-      }
-    ];
-  });
+ const [notes, setNotes] = useState([]);
    useEffect(() => {
   const fetchNotes = async () => {
-    try {
-      const response = await fetch('https://notenest-backend-6a8o.onrender.com/notes');
-      const data = await response.json();
+  try {
+    const userId = localStorage.getItem("userId");
 
-      setNotes(data);
-    } catch (error) {
-      console.log("Error fetching notes:", error);
+    if (!userId) {
+      setNotes([]);
+      return;
     }
-  };
+
+    const response = await fetch(
+      `https://notenest-backend-6a8o.onrender.com/notes?userId=${userId}`
+    );
+
+    const data = await response.json();
+
+    setNotes(data);
+  } catch (error) {
+    console.log("Error fetching notes:", error);
+  }
+};
 
   fetchNotes();
-}, []);
-  // Save Notes
-  useEffect(() => {
-    localStorage.setItem("notes", JSON.stringify(notes));
-  }, [notes]);
+}, [isLoggedIn]);
+ 
 
   // Add or Update Note
   const addNote = () => {
@@ -213,9 +185,14 @@ function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserName("");
+    setNotes([]);
+
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userId");
+
     navigate("/login");
-  };
+};
 
   return (
     <Routes>
@@ -225,11 +202,15 @@ function App() {
         path="/login"
         element={
           <Login
-            onLogin={(fullName) => {
+            onLogin={(user) => {
               setIsLoggedIn(true);
               localStorage.setItem("isLoggedIn", "true");
-              setUserName(fullName);
-              localStorage.setItem("userName", fullName);
+
+              setUserName(user.fullName);
+              localStorage.setItem("userName", user.fullName);
+
+              localStorage.setItem("userId", user.id);
+
               navigate("/");
             }}
           />

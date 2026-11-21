@@ -27,6 +27,8 @@ function UploadNotes({ onUpload }) {
     formData.append('description', description);
     formData.append('file', file);
 
+    formData.append('userId', localStorage.getItem('userId'));
+
     try {
       setLoading(true);
 
