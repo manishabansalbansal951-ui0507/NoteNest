@@ -359,47 +359,22 @@ function App() {
 
               </section>
 
-              {/* Add New Note Section */}
-              <section className="add-note-section">
+             {/* Share Your Knowledge Section */}
+            <section className="add-note-section">
 
-                <div className="form-heading">
-                  <span>SHARE YOUR KNOWLEDGE</span>
-                  <h2>Add New Note</h2>
-                  <p>Share your study material with other students.</p>
-                </div>
+              <div className="form-heading">
+                <span>SHARE YOUR KNOWLEDGE</span>
+                <h2>Have Notes to Share?</h2>
+                <p>
+                  Upload your study material and help other students learn.
+                </p>
 
-                <div className="form-fields">
+                <button onClick={() => navigate("/upload")}>
+                  📤 Upload Your Notes →
+                </button>
+              </div>
 
-                  <div className="input-row">
-
-                    <input
-                      type="text"
-                      placeholder="Enter note title"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                    />
-
-                    <input
-                      type="text"
-                      placeholder="Enter subject"
-                      value={newSubject}
-                      onChange={(e) => setNewSubject(e.target.value)}
-                    />
-
-                  </div>
-
-                  <textarea
-                    placeholder="Write a short description..."
-                    value={newDescription}
-                    onChange={(e) => setNewDescription(e.target.value)}
-                  />
-
-                  <button onClick={addNote}>
-                    {editingNoteId !== null ? "Update Note" : "+ Add Note"}
-                  </button>
-
-                </div>
-              </section>
+            </section>
 
               {/* Available Notes Section */}
               <section className="available-notes" id="notes">
