@@ -25,7 +25,7 @@ function Login({ onLogin }) {
 
     alert(result.message);
     if (response.ok && !isRegister) {
-  onLogin(result.fullName); // Pass the full name to the onLogin callback
+  onLogin(result.user.fullName); // Pass the full name to the onLogin callback
 }
 
   } catch (error) {
