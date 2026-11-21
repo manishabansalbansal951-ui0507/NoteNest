@@ -656,3 +656,73 @@ textarea {
   font-size: 28px;
   cursor: pointer;
 }
+
+/* SHARE YOUR KNOWLEDGE SECTION */
+
+.add-note-section {
+  position: relative;
+  overflow: hidden;
+  margin: 45px 0;
+  padding: 55px 35px;
+  text-align: center;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #e4f3e9, #f5f8ef, #d8eee3);
+  border: 1px solid #d5e9dc;
+  box-shadow: 0 10px 30px rgba(32, 61, 50, 0.08);
+  transition: 0.3s ease;
+}
+
+.add-note-section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 35px rgba(32, 61, 50, 0.12);
+}
+
+.add-note-section .form-heading span {
+  display: inline-block;
+  color: #188568;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.add-note-section .form-heading h2 {
+  color: #203d32;
+  font-size: 32px;
+  margin: 8px 0 12px;
+}
+
+.add-note-section .form-heading p {
+  color: #718078;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 25px;
+}
+
+.add-note-section button {
+  padding: 15px 30px;
+  border-radius: 10px;
+  background: #188568;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 5px 15px rgba(24, 133, 104, 0.2);
+  transition: 0.3s ease;
+}
+
+.add-note-section button:hover {
+  background: #116b53;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(24, 133, 104, 0.25);
+}
+
+@media (max-width: 600px) {
+  .add-note-section {
+    padding: 38px 20px;
+    margin: 30px 0;
+  }
+
+  .add-note-section .form-heading h2 {
+    font-size: 25px;
+  }
+}
