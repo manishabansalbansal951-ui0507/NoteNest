@@ -199,6 +199,17 @@ const server = http.createServer(async (req, res) => {
                 });
                 return;
             }
+                
+            if (!user.loginHistory) {
+                        user.loginHistory = [];
+                    }
+
+                    user.loginHistory.push({
+                        email: user.email,
+                        loginAt: new Date().toISOString()
+                    });
+
+                    saveJSON(usersFile, users);
 
             sendJSON(res, 200, {
                 message: 'Login successful!',
