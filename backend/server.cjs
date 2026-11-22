@@ -210,7 +210,7 @@ const server = http.createServer(async (req, res) => {
                     });
 
                     saveJSON(usersFile, users);
-
+                   console.log("USER LOGIN:", user.email, new Date().toLocaleString());
             sendJSON(res, 200, {
                 message: 'Login successful!',
                 user: {
