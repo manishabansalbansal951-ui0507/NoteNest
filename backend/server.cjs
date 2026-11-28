@@ -9,7 +9,7 @@ const path = require('path');
 const fs = require('fs');
 
 const connectDB = require('./db.cjs');
-const User = require('./models/User');
+const User = require('./models/user');
 const Note = require('./models/Note');
 
 dotenv.config();
@@ -50,7 +50,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     limits: {
-        fileSize: 10 * 1024 * 1024
+        fileSize: 25 * 1024 * 1024
     },
     fileFilter: (req, file, cb) => {
         if (

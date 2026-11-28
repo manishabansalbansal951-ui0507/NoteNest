@@ -3,7 +3,15 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import Login from './Login';
 import heroImage from './assets/hero.png';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import Bookmarks from './pages/Bookmarks';
+import Notifications from './pages/Notifications';
+import {
+  Routes,
+  Route,
+  Navigate,
+  useNavigate
+} from 'react-router-dom';
+
 import ExploreNotes from './pages/ExploreNotes';
 import UploadNotes from './pages/UploadNotes';
 import MyNotes from './pages/MyNotes';
@@ -13,222 +21,321 @@ import About from './pages/About';
 function App() {
   const navigate = useNavigate();
 
+  const API_URL = 'http://localhost:5000';
+
+  // STATES
   const [count, setCount] = useState(0);
- const [userName, setUserName] = useState(
-  localStorage.getItem("userName") || ""
-);
+
+  const [userName, setUserName] = useState(
+    localStorage.getItem('userName') || ''
+  );
 
   const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("isLoggedIn") === "true"
+    localStorage.getItem('isLoggedIn') === 'true'
   );
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState("All");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('All');
 
-  const [newTitle, setNewTitle] = useState("");
-  const [newSubject, setNewSubject] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [myNotes, setMyNotes] = useState([]);
 
-  // Load Notes
- const [notes, setNotes] = useState([]);
-   useEffect(() => {
-  const fetchNotes = async () => {
-  try {
-    const userId = localStorage.getItem("userId");
+  // ADD NOTIFICATION
+const addNotification = (title, message) => {
+  const oldNotifications = JSON.parse(
+    localStorage.getItem('notifications') || '[]'
+  );
 
-    if (!userId) {
-      setNotes([]);
-      return;
-    }
-
-    const response = await fetch(
-      `https://notenest-backend-6a8o.onrender.com/notes?userId=${userId}`
-    );
-
-    const data = await response.json();
-
-    setNotes(data);
-  } catch (error) {
-    console.log("Error fetching notes:", error);
-  }
-};
-
-  fetchNotes();
-}, [isLoggedIn]);
- 
-
-  // Add or Update Note
-  const addNote = () => {
-    if (!isLoggedIn) {
-      alert("Please login first to add notes!");
-      return;
-    }
-
-    if (!newTitle || !newSubject || !newDescription) {
-      alert("Please fill all fields!");
-      return;
-    }
-
-    if (editingNoteId !== null) {
-      const updatedNotes = notes.map((note) =>
-        note.id === editingNoteId
-          ? {
-              ...note,
-              title: newTitle,
-              subject: newSubject,
-              description: newDescription
-            }
-          : note
-      );
-
-      setNotes(updatedNotes);
-      setEditingNoteId(null);
-
-    } else {
-      const newNote = {
-        id: Date.now(),
-        title: newTitle,
-        subject: newSubject,
-        description: newDescription
-      };
-
-      setNotes([...notes, newNote]);
-    }
-
-    setNewTitle("");
-    setNewSubject("");
-    setNewDescription("");
+  const newNotification = {
+    id: Date.now(),
+    title: title,
+    message: message,
+    date: new Date().toLocaleString(),
+    read: false
   };
 
-  // Edit Note
-  const editNote = (note) => {
-    setNewTitle(note.title);
-    setNewSubject(note.subject);
-    setNewDescription(note.description);
-    setEditingNoteId(note.id);
-     
-    navigate("/");
-
-  setTimeout(() => {
-    document.querySelector(".add-note-section")?.scrollIntoView({
-      behavior: "smooth"
-    });
-  },300);
+  localStorage.setItem(
+    'notifications',
+    JSON.stringify([newNotification, ...oldNotifications])
+  );
 };
 
-  // Delete Note
-  const deleteNote = async (id) => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this note?"
-  );
+  // FORMAT NOTES
+  const formatNotes = (items) =>
+    items.map((note) => ({
+      ...note,
+      id: note._id || note.id
+    }));
 
-  if (confirmDelete) {
+  // FETCH ALL NOTES
+  const fetchNotes = async () => {
     try {
-      const response = await fetch(
-        `https://notenest-backend-6a8o.onrender.com/notes/${id}`,
-        {
-          method: 'DELETE'
+      // Public notes
+      const response = await fetch(`${API_URL}/notes`);
+      const data = await response.json();
+
+      if (response.ok && Array.isArray(data)) {
+        setNotes(formatNotes(data));
+      } else {
+        console.log('Could not load notes:', data.message);
+      }
+
+      // User's personal notes
+      const token = localStorage.getItem('token');
+
+      if (token) {
+        const myResponse = await fetch(`${API_URL}/my-notes`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const myData = await myResponse.json();
+
+        if (myResponse.ok && Array.isArray(myData)) {
+          setMyNotes(formatNotes(myData));
+        } else {
+          setMyNotes([]);
+          console.log('Could not load My Notes:', myData.message);
         }
-      );
+      } else {
+        setMyNotes([]);
+      }
+
+    } catch (error) {
+      console.log('Error fetching notes:', error);
+    }
+  };
+
+  // LOAD NOTES WHEN LOGIN STATUS CHANGES
+  useEffect(() => {
+    fetchNotes();
+  }, [isLoggedIn]);
+
+  // UPDATE NOTE
+  const updateNote = async (id, updatedData) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        return {
+          success: false,
+          message: 'Please login first!'
+        };
+      }
+
+      const response = await fetch(`${API_URL}/notes/${id}`, {
+        method: 'PUT',
+
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+
+        body: JSON.stringify(updatedData)
+      });
 
       const result = await response.json();
 
       if (!response.ok) {
-        alert(result.message);
+        return {
+          success: false,
+          message: result.message || 'Update failed!'
+        };
+      }
+
+      await fetchNotes();
+
+      return {
+        success: true
+      };
+
+    } catch (error) {
+      console.log('Update error:', error);
+
+      return {
+        success: false,
+        message: 'Backend connection failed!'
+      };
+    }
+  };
+
+  // DELETE NOTE
+  const deleteNote = async (id) => {
+
+    if (!id) {
+      alert('Note ID not found!');
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this note?'
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        alert('Please login first!');
+        navigate('/login');
         return;
       }
 
-      const updatedNotes = notes.filter(
-        (note) => note.id !== id
-      );
+      const response = await fetch(`${API_URL}/notes/${id}`, {
+        method: 'DELETE',
 
-      setNotes(updatedNotes);
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
 
-      alert("Note deleted successfully!");
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.message || 'Could not delete note.');
+        return;
+      }
+
+      await fetchNotes();
+
+        addNotification(
+        'Note Deleted',
+        'Your note has been successfully deleted.'
+        );
+
+        alert('Note deleted successfully!');
 
     } catch (error) {
-      alert("Delete failed! Please check your backend.");
+      console.log('Delete error:', error);
+      alert('Delete failed! Please check your backend.');
     }
-  }
-};
+  };
 
-  const handleUpload = (note) => {
-  if (!isLoggedIn) {
-    alert("Please login first!");
-    navigate("/login");
-    return;
-  }
+  // UPLOAD NOTE
+  const handleUpload = async () => {
 
-  setNotes((prevNotes) => [
-    ...prevNotes,
-    { ...note, id: Date.now() }
-  ]);
+    if (!isLoggedIn) {
+      alert('Please login first!');
+      navigate('/login');
+      return;
+    }
 
-  alert("Note uploaded successfully!");
-  navigate("/my-notes");
-};
+    await fetchNotes();
 
-  // Search and Filter Notes
+        addNotification(
+        'Note Uploaded',
+        'Your study material has been successfully uploaded!'
+        );
+
+        alert('Note uploaded successfully!');
+
+        navigate('/my-notes');
+  };
+
+  // SEARCH AND FILTER NOTES
   const filteredNotes = notes.filter((note) => {
-    const matchesSearch = note.title
+
+    const matchesSearch = (note.title || '')
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
 
     const matchesSubject =
-      selectedSubject === "All" || note.subject === selectedSubject;
+      selectedSubject === 'All' ||
+      note.subject === selectedSubject;
 
     return matchesSearch && matchesSubject;
   });
 
-  // Logout
+  // CHECK NOTE OWNER
+  const isNoteOwner = (note) => {
+
+    const currentUserId = localStorage.getItem('userId');
+
+    const ownerId =
+      typeof note.uploadedBy === 'object'
+        ? note.uploadedBy?._id || note.uploadedBy?.id
+        : note.uploadedBy;
+
+    return Boolean(
+      currentUserId &&
+      ownerId &&
+      String(currentUserId) === String(ownerId)
+    );
+  };
+
+  // LOGOUT
   const handleLogout = () => {
+
     setIsLoggedIn(false);
-    setUserName("");
+    setUserName('');
     setNotes([]);
+    setMyNotes([]);
 
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userId");
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('token');
 
-    navigate("/login");
-};
+    navigate('/login');
+  };
 
   return (
+
     <Routes>
 
-      {/* Login Page */}
+      {/* LOGIN PAGE */}
+
       <Route
         path="/login"
         element={
           <Login
             onLogin={(user) => {
+
               setIsLoggedIn(true);
-              localStorage.setItem("isLoggedIn", "true");
-
               setUserName(user.fullName);
-              localStorage.setItem("userName", user.fullName);
 
-              localStorage.setItem("userId", user.id);
+              addNotification(
+                    'Welcome to NoteNest!',
+                    `Hello ${user.fullName}, you have successfully logged in.`
+                    );
 
-              navigate("/");
+              localStorage.setItem('isLoggedIn', 'true');
+              localStorage.setItem('userName', user.fullName);
+              localStorage.setItem('userId', user.id);
+
+              navigate('/home');
             }}
           />
         }
       />
 
-              <Route
-          path="/explore"
-          element={
-            <>
-              <Navbar title="NoteNest" />
-              <ExploreNotes notes={notes} />
-            </>
-          }
-        />
-        
+      {/* EXPLORE NOTES */}
 
-              <Route
+      <Route
+        path="/explore"
+        element={
+          <>
+            <Navbar title="NoteNest" />
+            <ExploreNotes notes={notes} />
+          </>
+        }
+      />
+
+      <Route
+  path="/notifications"
+  element={
+    <>
+      <Navbar title="NoteNest" />
+      <Notifications />
+    </>
+  }
+/>
+
+      {/* UPLOAD NOTES */}
+
+      <Route
         path="/upload"
         element={
           <>
@@ -238,14 +345,17 @@ function App() {
         }
       />
 
-            <Route
+      {/* MY NOTES */}
+
+      <Route
         path="/my-notes"
         element={
           <>
             <Navbar title="NoteNest" />
-           <MyNotes
-              notes={notes}
-              onEdit={editNote}
+
+            <MyNotes
+              notes={myNotes}
+              onUpdate={updateNote}
               onDelete={deleteNote}
             />
           </>
@@ -253,139 +363,254 @@ function App() {
       />
 
 
+            {/* BOOKMARKS */}
+
+      <Route
+        path="/bookmarks"
+        element={
+          <>
+            <Navbar title="NoteNest" />
+            <Bookmarks />
+          </>
+        }
+      />
+
+      {/* PROFILE */}
+
       <Route
         path="/profile"
         element={
           <>
             <Navbar title="NoteNest" />
-            <Profile userName={userName} notes={notes} />
+
+            <Profile
+              userName={userName}
+              notes={myNotes}
+            />
           </>
         }
       />
 
+      {/* ABOUT */}
+
       <Route
-      path="/about"
-      element={
-        <>
-          <Navbar title="NoteNest" />
-          <About />
-        </>
-      }s
-    />
-    <Route
-  path="/"
-  element={
-    <Navigate
-      to={isLoggedIn ? "/home" : "/login"}
-      replace
-    />
-  }
-/>
-      {/* Home Page */}
+        path="/about"
+        element={
+          <>
+            <Navbar title="NoteNest" />
+            <About />
+          </>
+        }
+      />
+
+      {/* DEFAULT ROUTE */}
+
+      <Route
+        path="/"
+        element={
+          <Navigate
+            to={isLoggedIn ? '/home' : '/login'}
+            replace
+          />
+        }
+      />
+
+      {/* HOME PAGE */}
+
       <Route
         path="/home"
         element={
+
           <div>
+
             <Navbar title="NoteNest" />
 
             <main className="home-content">
 
-              {/* Hero Section */}
-              <section className="hero-section">
+              {/* HERO SECTION */}
 
-                <div className="hero-text">
-                  <span className="hero-tag">YOUR LEARNING SPACE</span>
+                    <section className="hero-section">
 
-                  <h1>
-                    Make Learning <span>Simple & Smarter.</span>
-                  </h1>
+                    <div className="hero-text">
 
-                  <p>
-                    Explore quality study notes, share your knowledge
-                    and grow together with a community of learners.
-                  </p>
+                        <span className="hero-tag">
+                        ✨ WELCOME TO NOTENEST
+                        </span>
 
-                  <button
-                    onClick={() =>
-                      document.getElementById("notes")?.scrollIntoView({
-                        behavior: "smooth"
-                      })
-                    }
-                  >
-                    Explore Notes →
-                  </button>
-                </div>
+                        <h1>
+                        Your Learning Journey
+                        <span> Starts Here.</span>
+                        </h1>
 
-                <div className="hero-image">
-                  <img src={heroImage} alt="Students learning" />
-                </div>
+                        <p>
+                        Discover helpful study notes, share your knowledge
+                        and connect with a community of learners.
+                        Everything you need to learn better is here!
+                        </p>
 
-              </section>
+                        <div className="hero-buttons">
 
-              {/* Statistics Section */}
+                        <button onClick={() => navigate('/explore')}>
+                            Explore Notes →
+                        </button>
+
+                        <button
+                            className="secondary-btn"
+                            onClick={() => navigate('/upload')}
+                        >
+                            Upload Notes +
+                        </button>
+
+                        </div>
+
+                        <div className="hero-welcome">
+                        👋 Welcome {isLoggedIn ? userName : 'Learner'}!
+                        </div>
+
+                    </div>
+
+                    <div className="hero-image">
+                        <img src={heroImage} alt="Students learning" />
+                    </div>
+
+                    </section>
+
+              {/* STATISTICS SECTION */}
+
               <section className="stats-grid">
 
                 <div className="stat-card">
-                  <div className="stat-icon">♡</div>
+
+                  <div className="stat-icon">
+                    ♡
+                  </div>
+
                   <div>
                     <h2>{count}</h2>
                     <p>Total Likes</p>
                   </div>
+
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">👤</div>
+
+                  <div className="stat-icon">
+                    👤
+                  </div>
+
                   <div>
+
                     <h3>
                       {isLoggedIn
                         ? `Welcome, ${userName}!`
-                        : "Join NoteNest"}
+                        : 'Join NoteNest'}
                     </h3>
+
                     <p>
                       {isLoggedIn
-                        ? "You are logged in"
-                        : "Start your learning journey"}
+                        ? 'You are logged in'
+                        : 'Start your learning journey'}
                     </p>
+
                   </div>
+
                 </div>
 
                 <div className="stat-card">
-                  <div className="stat-icon">📚</div>
+
+                  <div className="stat-icon">
+                    📚
+                  </div>
+
                   <div>
                     <h3>Study Resources</h3>
                     <p>Learn • Share • Grow</p>
                   </div>
+
                 </div>
 
               </section>
 
-             {/* Share Your Knowledge Section */}
-            <section className="add-note-section">
+              {/* UPLOAD SECTION */}
 
-              <div className="form-heading">
-                <span>SHARE YOUR KNOWLEDGE</span>
-                <h2>Have Notes to Share?</h2>
-                <p>
-                  Upload your study material and help other students learn.
-                </p>
+              <section className="add-note-section">
 
-                <button onClick={() => navigate("/upload")}>
-                  📤 Upload Your Notes →
-                </button>
-              </div>
+                <div className="form-heading">
 
-            </section>
+                  <span>SHARE YOUR KNOWLEDGE</span>
 
-              {/* Available Notes Section */}
-              <section className="available-notes" id="notes">
+                  <h2>Have Notes to Share?</h2>
 
-                <div className="notes-heading">
-                  <span>EXPLORE RESOURCES</span>
-                  <h2>Available Notes</h2>
-                  <p>Find study material and learn something new.</p>
+                  <p>
+                    Upload your study material and help other students learn.
+                  </p>
+
+                  <button onClick={() => navigate('/upload')}>
+                    📤 Upload Your Notes →
+                  </button>
+
                 </div>
 
-                {/* Search and Filter */}
+              </section>
+
+              {/* HOW NOTENEST WORKS */}
+
+                <section className="how-it-works">
+
+                <div className="how-heading">
+                    <span>START YOUR JOURNEY</span>
+                    <h2>How NoteNest Works</h2>
+                    <p>Three simple steps to make learning easier.</p>
+                </div>
+
+                <div className="steps-container">
+
+                    <div className="step-card">
+                    <div className="step-icon">📚</div>
+                    <span className="step-number">01</span>
+                    <h3>Explore Notes</h3>
+                    <p>Discover useful study materials shared by other students.</p>
+                    </div>
+
+                    <div className="step-card">
+                    <div className="step-icon">📤</div>
+                    <span className="step-number">02</span>
+                    <h3>Upload Notes</h3>
+                    <p>Share your notes and help other learners grow.</p>
+                    </div>
+
+                    <div className="step-card">
+                    <div className="step-icon">🎓</div>
+                    <span className="step-number">03</span>
+                    <h3>Learn Together</h3>
+                    <p>Connect, learn and grow with the NoteNest community.</p>
+                    </div>
+
+                </div>
+
+                </section>
+
+              {/* AVAILABLE NOTES */}
+
+              <section
+                className="available-notes"
+                id="notes"
+              >
+
+                <div className="notes-heading">
+
+                  <span>EXPLORE RESOURCES</span>
+
+                  <h2>Available Notes</h2>
+
+                  <p>
+                    Find study material and learn something new.
+                  </p>
+
+                </div>
+
+                {/* SEARCH AND FILTER */}
+
                 <div className="notes-filter">
 
                   <input
@@ -397,27 +622,55 @@ function App() {
 
                   <select
                     value={selectedSubject}
-                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    onChange={(e) =>
+                      setSelectedSubject(e.target.value)
+                    }
                   >
-                    <option value="All">All Subjects</option>
-                    <option value="Database Management">Database Management</option>
-                    <option value="Design and Analysis">Design and Analysis</option>
-                    <option value="Operating Systems">Operating Systems</option>
-                    <option value="Programming">Programming</option>
-                    <option value="Networking">Networking</option>
+
+                    <option value="All">
+                      All Subjects
+                    </option>
+
+                    <option value="Database Management">
+                      Database Management
+                    </option>
+
+                    <option value="Design and Analysis">
+                      Design and Analysis
+                    </option>
+
+                    <option value="Operating Systems">
+                      Operating Systems
+                    </option>
+
+                    <option value="Programming">
+                      Programming
+                    </option>
+
+                    <option value="Networking">
+                      Networking
+                    </option>
+
                   </select>
 
                 </div>
 
-                {/* Notes Cards */}
+                {/* NOTES CARDS */}
+
                 <div className="notes-container">
 
                   {filteredNotes.length > 0 ? (
 
                     filteredNotes.map((note) => (
-                      <div className="note-card" key={note.id}>
 
-                        <div className="note-icon">📘</div>
+                      <div
+                        className="note-card"
+                        key={note.id}
+                      >
+
+                        <div className="note-icon">
+                          📘
+                        </div>
 
                         <h3>{note.title}</h3>
 
@@ -427,23 +680,28 @@ function App() {
 
                         <p>{note.description}</p>
 
-                        <button onClick={() => {
-                          alert(
-                            `Title: ${note.title}\nSubject: ${note.subject}\n\nDescription: ${note.description}`
-                          );
-                        }}>
+                        <button
+                          onClick={() => {
+                            alert(
+                              `Title: ${note.title}\nSubject: ${note.subject}\n\nDescription: ${note.description}`
+                            );
+                          }}
+                        >
                           View Notes →
                         </button>
 
-                        <button onClick={() => editNote(note)}>
-                          ✏️ Edit
-                        </button>
+                        {isLoggedIn && isNoteOwner(note) && (
 
-                        <button onClick={() => deleteNote(note.id)}>
-                          🗑️ Delete
-                        </button>
+                          <button
+                            onClick={() => navigate('/my-notes')}
+                          >
+                            Manage in My Notes
+                          </button>
+
+                        )}
 
                       </div>
+
                     ))
 
                   ) : (
@@ -455,29 +713,75 @@ function App() {
                   )}
 
                 </div>
+
               </section>
 
-              {/* Login and Like Buttons */}
+              {/* LOGIN, LOGOUT AND LIKE BUTTONS */}
+
               <div className="bottom-buttons">
 
-                <button onClick={() => {
-                  if (isLoggedIn) {
-                    handleLogout();
-                  } else {
-                    navigate("/login");
-                  }
-                }}>
-                  {isLoggedIn ? "Logout" : "Login"}
+                <button
+                  onClick={() => {
+
+                    if (isLoggedIn) {
+                      handleLogout();
+                    } else {
+                      navigate('/login');
+                    }
+
+                  }}
+                >
+                  {isLoggedIn ? 'Logout' : 'Login'}
                 </button>
 
-                <button onClick={() => setCount(count + 1)}>
+                <button
+                  onClick={() => setCount(count + 1)}
+                >
                   Like ♡
                 </button>
 
               </div>
 
+              {/* FOOTER */}
+
+                <footer className="notenest-footer">
+
+                <div className="footer-content">
+
+                    <div className="footer-brand">
+                    <h2>📚 NoteNest</h2>
+                    <p>
+                        Your learning space to explore, share
+                        and grow together.
+                    </p>
+                    </div>
+
+                    <div className="footer-links">
+                    <h3>Quick Links</h3>
+                    <a href="/">Home</a>
+                    <a href="/explore">Explore Notes</a>
+                    <a href="/upload">Upload Notes</a>
+                    <a href="/about">About Us</a>
+                    </div>
+
+                    <div className="footer-contact">
+                    <h3>Stay Connected</h3>
+                    <p>Keep Learning • Keep Growing</p>
+                    <p>Made with 💚 for Students</p>
+                    </div>
+
+                </div>
+
+                <div className="footer-bottom">
+                    © 2026 NoteNest. All Rights Reserved.
+                </div>
+
+                </footer>
+
             </main>
+
           </div>
+
         }
       />
 

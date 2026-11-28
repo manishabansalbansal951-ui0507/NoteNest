@@ -3,126 +3,156 @@ import './Login.css';
 
 function Login({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const API_URL = 'http://localhost:5000';
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const formData = new FormData(e.target);
-  const userData = Object.fromEntries(formData.entries());
+    const formData = new FormData(e.target);
+    const userData = Object.fromEntries(formData.entries());
 
-  try {
-    const endpoint = isRegister ? 'register' : 'login';
+    try {
+      setLoading(true);
 
-    const response = await fetch(`https://notenest-backend-6a8o.onrender.com/${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(userData)
-    });
+      const endpoint = isRegister ? 'register' : 'login';
 
-    const result = await response.json();
+      const response = await fetch(`${API_URL}/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
 
-    alert(result.message);
-    if (response.ok && !isRegister) {
-  onLogin(result.user); // Pass the full name to the onLogin callback
-}
+      const result = await response.json();
 
-  } catch (error) {
-    alert('Backend connection failed!');
-  }
-};
+      if (!response.ok) {
+        alert(result.message || 'Something went wrong!');
+        return;
+      }
 
- return (
-  <div className="login-page">
+      if (isRegister) {
+        alert(result.message || 'Registration successful! Please login.');
+        setIsRegister(false);
+        e.target.reset();
+      } else {
+        // Save JWT token
+        localStorage.setItem('token', result.token);
 
-    <div className="login-left">
+        // Save user details
+        localStorage.setItem('userId', result.user.id);
+        localStorage.setItem('userName', result.user.fullName);
+        localStorage.setItem('isLoggedIn', 'true');
 
-      <span className="login-tag">WELCOME TO NOTENEST</span>
+        alert(result.message || 'Login successful!');
 
-      <h1>
-        Learn Better.
-        <br />
-        <span>Grow Together.</span>
-      </h1>
+        // Send user details to App.jsx
+        onLogin(result.user);
+      }
 
-      <p>
-        Your learning journey starts here.
-        Explore notes, share knowledge and connect
-        with fellow students.
-      </p>
+    } catch (error) {
+      console.error('Login Error:', error);
+      alert('Backend connection failed!');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      <div className="login-features">
-        <div>✓ Quality Study Notes</div>
-        <div>✓ Share Your Knowledge</div>
-        <div>✓ Learn Together</div>
-      </div>
+  return (
+    <div className="login-page">
 
-    </div>
+      <div className="login-left">
 
-    <div className="login-right">
+        <span className="login-tag">WELCOME TO NOTENEST</span>
 
-      <div className="login-container">
+        <h1>
+          Learn Better.
+          <br />
+          <span>Grow Together.</span>
+        </h1>
 
-        <div className="login-logo">N</div>
-
-        <h2>
-          {isRegister ? "Create Account" : "Welcome Back!"}
-        </h2>
-
-        <p className="login-subtitle">
-          {isRegister
-            ? "Create your NoteNest account"
-            : "Login to continue your learning journey"}
+        <p>
+          Your learning journey starts here.
+          Explore notes, share knowledge and connect
+          with fellow students.
         </p>
 
-        <form onSubmit={handleSubmit}>
-
-  {isRegister && (
-    <input
-      type="text"
-      name="fullName"
-      placeholder="Full Name"
-      required
-    />
-  )}
-
-  <input
-    type="email"
-    name="email"
-    placeholder="Email Address"
-    required
-  />
-
-
-  <input
-    type="password"
-    name="password"
-    placeholder="Password"
-    required
-  />
-
-  <button type="submit">
-    {isRegister ? "Create Account →" : "Login →"}
-  </button>
-
-</form>
-
-        <p
-          className="register-link"
-          onClick={() => setIsRegister(!isRegister)}
-        >
-          {isRegister
-            ? "Already have an account? Login"
-            : "Don't have an account? Register"}
-        </p>
+        <div className="login-features">
+          <div>✓ Quality Study Notes</div>
+          <div>✓ Share Your Knowledge</div>
+          <div>✓ Learn Together</div>
+        </div>
 
       </div>
 
-    </div>
+      <div className="login-right">
 
-  </div>
-);
+        <div className="login-container">
+
+          <div className="login-logo">N</div>
+
+          <h2>
+            {isRegister ? "Create Account" : "Welcome Back!"}
+          </h2>
+
+          <p className="login-subtitle">
+            {isRegister
+              ? "Create your NoteNest account"
+              : "Login to continue your learning journey"}
+          </p>
+
+          <form onSubmit={handleSubmit}>
+
+            {isRegister && (
+              <input
+                type="text"
+                name="fullName"
+                placeholder="Full Name"
+                required
+              />
+            )}
+
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              required
+            />
+
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+
+            <button type="submit" disabled={loading}>
+              {loading
+                ? "Please wait..."
+                : isRegister
+                  ? "Create Account →"
+                  : "Login →"}
+            </button>
+
+          </form>
+
+          <p
+            className="register-link"
+            onClick={() => setIsRegister(!isRegister)}
+          >
+            {isRegister
+              ? "Already have an account? Login"
+              : "Don't have an account? Register"}
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
 }
 
 export default Login;

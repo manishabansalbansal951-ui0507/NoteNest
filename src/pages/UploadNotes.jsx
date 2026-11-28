@@ -7,6 +7,8 @@ function UploadNotes({ onUpload }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const API_URL = 'http://localhost:5000';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -20,6 +22,13 @@ function UploadNotes({ onUpload }) {
       return;
     }
 
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert("Please login first!");
+      return;
+    }
+
     const formData = new FormData();
 
     formData.append('title', title);
@@ -27,15 +36,16 @@ function UploadNotes({ onUpload }) {
     formData.append('description', description);
     formData.append('file', file);
 
-    formData.append('userId', localStorage.getItem('userId'));
-
     try {
       setLoading(true);
 
       const response = await fetch(
-        'https://notenest-backend-6a8o.onrender.com/upload-note',
+        `${API_URL}/upload-note`,
         {
           method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
           body: formData
         }
       );
@@ -43,13 +53,13 @@ function UploadNotes({ onUpload }) {
       const result = await response.json();
 
       if (!response.ok) {
-        alert(result.message);
+        alert(result.message || "Upload failed!");
         return;
       }
 
       alert("PDF uploaded successfully!");
 
-      onUpload(result.note);
+      await onUpload(result.note);
 
       setTitle('');
       setSubject('');
@@ -59,6 +69,7 @@ function UploadNotes({ onUpload }) {
       e.target.reset();
 
     } catch (error) {
+      console.log("Upload Error:", error);
       alert("Upload failed! Please check your backend server.");
     } finally {
       setLoading(false);
@@ -67,10 +78,13 @@ function UploadNotes({ onUpload }) {
 
   return (
     <div className="upload-page">
+
       <h1>Upload Your Notes</h1>
+
       <p>Share your study material with other students.</p>
 
       <form onSubmit={handleSubmit}>
+
         <input
           type="text"
           placeholder="Enter note title"
@@ -100,7 +114,9 @@ function UploadNotes({ onUpload }) {
         <button type="submit" disabled={loading}>
           {loading ? "Uploading..." : "Upload PDF"}
         </button>
+
       </form>
+
     </div>
   );
 }

@@ -1,77 +1,123 @@
-/* NAVBAR */
 
-nav {
-  background: rgba(255, 255, 255, 0.96);
-  color: #26352f;
-  padding: 15px 6%;
-  min-height: 78px;
+/* MAIN NAVBAR */
 
+.main-navbar {
+  background: rgba(255, 255, 255, 0.97);
+  min-height: 82px;
+  padding: 12px 5%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-
+  gap: 20px;
   box-sizing: border-box;
-  border-bottom: 1px solid #e8eee9;
+  border-bottom: 1px solid #e5eee8;
   box-shadow: 0 4px 20px rgba(30, 60, 45, 0.06);
-
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
-/* LOGO */
+/* BRAND LOGO */
 
-nav h2 {
-  margin: 0;
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: #176b50;
-  font-size: 29px;
+  text-decoration: none;
+  font-size: 27px;
   font-weight: 800;
   letter-spacing: -1px;
+  white-space: nowrap;
+}
+
+.brand-icon {
+  font-size: 30px;
 }
 
 /* NAVIGATION LINKS */
 
-nav div {
+.navbar-links {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: flex-end;
+  gap: 5px;
+  flex-wrap: wrap;
 }
 
-nav a {
-  color: #46564d;
+.nav-link {
+  color: #52645a;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-
-  padding: 10px 16px;
-  border-radius: 8px;
-
+  padding: 10px 12px;
+  border-radius: 9px;
   transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }
 
-nav a:hover {
+.nav-link:hover {
   color: #176b50;
-  background-color: #eaf5ef;
+  background: #eaf5ef;
   transform: translateY(-2px);
 }
 
-/* MOBILE RESPONSIVE */
+/* ACTIVE LINK */
 
-@media (max-width: 700px) {
-  nav {
-    padding: 15px 5%;
+.nav-link.active {
+  color: #ffffff;
+  background: #16866b;
+  box-shadow: 0 4px 10px rgba(22, 134, 107, 0.18);
+}
+
+/* NOTIFICATION */
+
+.notification-link {
+  position: relative;
+}
+
+.notification-badge {
+  background: #e74c3c;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 1000px) {
+  .main-navbar {
     flex-direction: column;
-    gap: 15px;
+    padding: 15px;
   }
 
-  nav div {
-    gap: 5px;
-    flex-wrap: wrap;
+  .navbar-links {
     justify-content: center;
   }
+}
 
-  nav a {
-    font-size: 13px;
-    padding: 8px 10px;
+@media (max-width: 600px) {
+  .navbar-links {
+    gap: 4px;
+  }
+
+  .nav-link {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .navbar-brand {
+    font-size: 24px;
   }
 }
