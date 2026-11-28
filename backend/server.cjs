@@ -10,7 +10,7 @@ const fs = require('fs');
 
 const connectDB = require('./db.cjs');
 const User = require('./models/user');
-const Note = require('./models/note');
+const Note = require('./models/Note');
 
 dotenv.config();
 
