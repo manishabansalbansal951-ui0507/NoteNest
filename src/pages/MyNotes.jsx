@@ -4,7 +4,7 @@ import './ModernNotes.css';
 
 function MyNotes({ notes = [], onUpdate, onDelete }) {
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'https://notenest-backend-6a8o.onrender.com';
 
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('newest');

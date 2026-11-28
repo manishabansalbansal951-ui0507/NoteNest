@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 function Bookmarks() {
 
   const [bookmarks, setBookmarks] = useState([]);
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'https://notenest-backend-6a8o.onrender.com';
 
   useEffect(() => {
     const saved = JSON.parse(

@@ -5,7 +5,7 @@ function Login({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'https://notenest-backend-6a8o.onrender.com';
 
   const handleSubmit = async (e) => {
     e.preventDefault();

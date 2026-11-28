@@ -8,7 +8,7 @@ function ExploreNotes({ notes = [] }) {
   const [bookmarks, setBookmarks] = useState([]);
   const [downloadCounts, setDownloadCounts] = useState({});
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'https://notenest-backend-6a8o.onrender.com';
 
   // Load Bookmarks
   useEffect(() => {

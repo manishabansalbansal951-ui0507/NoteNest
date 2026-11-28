@@ -7,7 +7,7 @@ function UploadNotes({ onUpload }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'https://notenest-backend-6a8o.onrender.com';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
